@@ -34,6 +34,13 @@ div#info-wrapper {
 	color: #ecf0f1;
 }
 
+div#info-wrapper #inner {
+	display: flex;
+	flex-direction: column;
+	max-width: calc(283pt + 20pt);
+	margin: 10pt
+}
+
 div#info-wrapper h1 {
 	text-align: center;
 }
@@ -51,6 +58,7 @@ div#info-wrapper strong {
 }
 
 div#info-wrapper .center {
+	text-align: center;
 	position: relative;
 	margin-bottom: 10pt;
 }

@@ -10,6 +10,8 @@
     Modern version of Tetris made using JS, HTML and CSS
 </p>
 
+[Live demo](https://leandrosq.github.io/web-tetris/src/index.html)
+
 W.I.P
 
 ---
