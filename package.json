@@ -1,0 +1,23 @@
+{
+  "name": "tetris",
+  "version": "1.0.0",
+  "description": "Simple tetris game",
+  "main": "index.html",
+  "scripts": {
+    "test": "http-server -a -p 8080 ./src"
+  },
+  "keywords": [
+    "Tetris",
+    "JavaScript",
+    "JS",
+    "Game"
+  ],
+  "author": "Leandro Quevedo",
+  "license": "MIT",
+  "devDependencies": {
+    "babel-eslint": "^10.1.0",
+    "eslint": "^7.32.0",
+    "eslint-config-google": "^0.14.0",
+    "http-server": "^13.0.0"
+  }
+}

@@ -1,0 +1,21 @@
+.floating-point {
+    position: absolute;
+    transform: translate(25%, -60%);
+    animation-name: FloatingPointAnimation;
+    animation-duration: 1.5s;
+    animation-iteration-count: 1;
+    animation-timing-function: ease;
+    animation-fill-mode: both;
+}
+
+@keyframes FloatingPointAnimation {
+	0%, 10% {
+		top: 50%;
+		opacity: 1;
+	}
+
+	100% {
+		top: -100%;
+		opacity: 0;
+	}
+}

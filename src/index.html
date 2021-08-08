@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+		<title>Tetris</title>
+
+		<link rel="stylesheet" href="style/fonts.css"/>
+		<link rel="stylesheet" href="style/style.css"/>
+		<link rel="stylesheet" href="style/floating-point-animation.css"/>
+		<link rel="stylesheet" href="style/startup-animation.css"/>
+		<link rel="stylesheet" href="style/crt-animation.css"/>
+		<link rel="icon" href="image/favicon.png"/>
+	</head>
+	<body class="crt">
+		<div id="dummy"></div>
+
+		<div id="wrapper">
+
+		</div>
+
+		<div id="info-wrapper">
+			<h1>T E T R I S</h1>
+			<hr/>
+			<div class="center">
+				<strong>SCORE:</strong>
+				<span id="score">0</span>
+			</div>
+			<div class="center">
+				<strong>LINES:</strong>
+				<span id="lines">0</span>
+			</div>
+			<div class="center">
+				<strong>PIECES:</strong>
+				<span id="pieces">0</span>
+			</div>
+		</div>
+
+		<script type="module" src="script/main.js"></script>
+	</body>
+</html>

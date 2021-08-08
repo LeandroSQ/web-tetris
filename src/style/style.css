@@ -1,0 +1,56 @@
+* {
+	margin: 0px;
+	padding: 0px;
+	box-sizing: border-box;
+	font-family: 'Nintendoid1', cursive;
+}
+
+html, body {
+	width: 100vw;
+	height: 100vh;
+	background: #073b4c;
+}
+
+body {
+	display: flex;
+	place-content: center;
+	place-items: center;
+}
+
+div#dummy {
+	flex: 1;
+}
+
+div#wrapper {
+	border: 1px solid #ecf0f1;
+	max-height: 0px;
+	animation: Startup 350ms ease-in-out 0s 1 both;
+	overflow: hidden;
+}
+
+div#info-wrapper {
+	flex: 1;
+	margin: 10pt;
+	color: #ecf0f1;
+}
+
+div#info-wrapper h1 {
+	text-align: center;
+}
+
+div#info-wrapper hr {
+	opacity: 0.25;
+	width: 70%;
+	margin: 20pt auto;
+	border-bottom: 1px solid #ccc;
+	border-top: none;
+}
+
+div#info-wrapper strong {
+	color: #ef476f;
+}
+
+div#info-wrapper .center {
+	position: relative;
+	margin-bottom: 10pt;
+}
