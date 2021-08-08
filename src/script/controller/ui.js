@@ -14,6 +14,16 @@ export class UIController {
 		}
 	}
 
+	reset() {
+		// Iterates trough every UI item
+		for (const property in UI) {
+			if (!UI.hasOwnProperty(property)) continue;
+
+			// Set it's value to 0
+			this.set(UI[property], "0");
+		}
+	}
+
 	set(id, value) {
 		const element = document.getElementById(id);
 		element.innerText = value.toString();
@@ -26,7 +36,7 @@ export class UIController {
 		x.innerText = `+${newPoints}`;
 
 		// Gets the score element and update it's value
-		const scoreElement = document.getElementById("score");
+		const scoreElement = document.getElementById(UI.SCORE);
 		scoreElement.innerText = totalPoints.toString();
 
 		// Append the element to DOM
@@ -51,3 +61,9 @@ export class UIController {
 	}
 
 }
+
+export const UI = {
+	"SCORE": "score",
+	"LINES": "lines",
+	"PIECES": "pieces"
+};

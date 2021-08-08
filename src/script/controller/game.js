@@ -4,7 +4,8 @@ import { DensityCanvas } from "../widget/density-canvas.js";
 import { GRID_COLS, GRID_PADDING, GRID_ROWS, STARTING_GAME_SPEED, TARGET_FRAMETIME } from "../constants.js";
 import { InputController, Keys } from "./input.js";
 import { AudioController, SoundFX } from "./audio.js";
-import { UIController } from "./ui.js";
+import { UI, UIController } from "./ui.js";
+import { GhostPiece } from "../model/ghost-piece.js";
 
 export class GameController {
 
@@ -40,9 +41,13 @@ export class GameController {
 		// Define the grid
 		this.grid = new Grid({ rows: GRID_ROWS, columns: GRID_COLS });
 		this.currentPiece = Piece.random(this);
+		this.ghostPiece = new GhostPiece(this.currentPiece);
 
 		// Invalidates the buffer
 		this.#invalidateGridBuffer();
+
+		// Reset the UI
+		UIController.instance.reset();
 	}
 
 	#invalidateGridBuffer() {
@@ -162,6 +167,9 @@ export class GameController {
 		// Checks if the current piece is about to collide
 		if (this.grid.isAnyCellBellowShape(this.currentPiece) || this.currentPiece.y + this.currentPiece.height >= this.grid.rows) {
 			this.#onPlacePiece();
+		} else {
+			// Updates the ghost piece
+			this.ghostPiece.loop(this.grid);
 		}
 
 		// Resets the keypress of the UP key
@@ -174,6 +182,9 @@ export class GameController {
 
 		// Render the current piece
 		this.currentPiece.render(this.ctx, this.cellSize);
+
+		// Renders the ghost piece
+		this.ghostPiece.render(this.ctx, this.cellSize);
 	}
 
 	#renderGrid() {
@@ -205,10 +216,11 @@ export class GameController {
 
 		// Count grid lines and update UI
 		const gridLines = this.grid.countRowsWithAtLeastOneCell();
-		UIController.instance.set("lines", gridLines);
+		UIController.instance.set(UI.LINES, gridLines);
 
 		// Generate a random piece
 		this.currentPiece = Piece.random(this);
+		this.ghostPiece = new GhostPiece(this.currentPiece);
 
 		// Check if the new piece already touched any piece
 		if (this.grid.isAnyCellBellowShape(this.currentPiece)) {
@@ -221,7 +233,7 @@ export class GameController {
 			// Increment the pieces placed count
 			this.piecesPlaced++;
 			// Update the UI
-			UIController.instance.set("pieces", this.piecesPlaced);
+			UIController.instance.set(UI.PIECES, this.piecesPlaced);
 		}
 
 		// Invalidates the buffer
@@ -233,7 +245,7 @@ export class GameController {
 		const newScore = linesRemoved * linesRemoved * 100;
 		this.score += newScore;
 
-		this.speed = 1 + this.score / 100 * 0.25;
+		this.speed += linesRemoved / 5;
 		console.log(this.speed);
 
 		// Updates the element

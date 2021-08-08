@@ -63,6 +63,4 @@ CanvasRenderingContext2D.prototype.fillTextCentered = function(str, x, y) {
 		x - measurement.width / 2,
 		y
 	);
-
-	return { width: measurement.width };
 };

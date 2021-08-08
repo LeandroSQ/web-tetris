@@ -19,17 +19,30 @@ export class Piece {
 	 **/
 	constructor(type, game) {
 		this.game = game;
-		this.type = type;
-		this.shape = Piece.shapes[this.type].slice(0);
+
+		if (type) {
+			this.type = type;
+			this.shape = Piece.shapes[this.type].slice(0);
+
+			this.position = {
+				x: game.grid.columns / 2 - this.width / 2,
+				y: 0
+			};
+
+			this.drawPosition = { x: this.position.x, y: this.position.y };
+		}
 
 		this.color = Colors.random();
 
-		this.position = {
-			x: game.grid.columns / 2 - this.width / 2,
-			y: 0
-		};
+	}
 
-		this.drawPosition = { x: this.position.x, y: this.position.y };
+	clone() {
+		const temp = new Piece(null, this.game);
+		temp.shape = this.shape.slice(0);
+		temp.position = { x: this.position.x, y: this.position.y };
+		temp.drawPosition = { x: this.drawPosition.x, y: this.drawPosition.y };
+
+		return temp;
 	}
 
 	render(ctx, cellSize) {
@@ -45,7 +58,7 @@ export class Piece {
 		for (let row = 0; row < this.shape.length; row++) {
 			for (let column = 0; column < this.shape[row].length; column++) {
 				// Ignore empty spaces
-				if (this.shape[row][column] <= 0) continue;
+				if (this.shape[row][column] === Piece.empty) continue;
 
 				// Calculate cell position
 				const x = column * cellSize;
