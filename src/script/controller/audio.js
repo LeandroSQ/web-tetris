@@ -90,9 +90,12 @@ export class AudioController {
 	}
 }
 
+// TODO: Fix this, it's only a temporary solution for github pages
+const audioSourcePath = window.location.pathname.substring(0, window.location.pathname.lastIndexOf("/"));
+
 export const SoundFX = {
-	"PLACE_BLOCK": "/audio/place.mp3",
-	"GAME_OVER": "/audio/gameover.wav",
-	"THEME": "/audio/music.mp3",
-	"SCORE": "/audio/score.wav",
+	"PLACE_BLOCK": `${audioSourcePath}/audio/place.mp3`,
+	"GAME_OVER": `${audioSourcePath}/audio/gameover.wav`,
+	"THEME": `${audioSourcePath}/audio/music.mp3`,
+	"SCORE": `${audioSourcePath}/audio/score.wav`,
 };
