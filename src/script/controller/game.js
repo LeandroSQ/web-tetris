@@ -6,6 +6,7 @@ import { InputController, Keys } from "./input.js";
 import { AudioController, SoundFX } from "./audio.js";
 import { UI, UIController } from "./ui.js";
 import { GhostPiece } from "../model/ghost-piece.js";
+import { TextUtils } from "../util/text.js";
 
 export class GameController {
 
@@ -148,14 +149,25 @@ export class GameController {
 		const title = "TETRIS";
 		const subtitle = "Press any key to start";
 
-		// Define the font style
-		this.ctx.fillStyle = "#fefefe";
+		TextUtils.drawCRT({
+			ctx: this.ctx,
+			text: title,
+			x: this.canvas.width / 2,
+			y: this.canvas.height / 2 - 25,
+			fontFamily: "Nintendoid1",
+			fontSize: 42.5,
+			color: "#fefefe"
+		});
 
-		this.ctx.font = "42.5pt Nintendoid1";
-		this.ctx.fillTextCentered(title, this.canvas.width / 2, this.canvas.height / 2 - 25);
-
-		this.ctx.font = "10pt Nintendoid1";
-		this.ctx.fillTextCentered(subtitle, this.canvas.width / 2, this.canvas.height / 2 + 10);
+		TextUtils.drawCRT({
+			ctx: this.ctx,
+			text: subtitle,
+			x: this.canvas.width / 2,
+			y: this.canvas.height / 2 + 10,
+			fontFamily: "Nintendoid1",
+			fontSize: 10,
+			color: "#fefefe"
+		});
 	}
 	// #endregion
 
@@ -284,23 +296,43 @@ export class GameController {
 	}
 
 	#renderGameOver() {
+		// Blurs the canvas
+		this.ctx.save();
+		this.ctx.filter = "blur(2px)";
+
+		// Renders the grid
 		this.#renderGrid();
 
+		// Dims the canvas
 		this.ctx.fillStyle = "rgba(0, 0, 0, 0.35)";
 		this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+		// Restore the canvas filters
+		this.ctx.restore();
 
 		// Define the string to be drawn
 		const title = "GAME-OVER";
 		const subtitle = "Press any key to restart";
 
-		// Define the font style
-		this.ctx.fillStyle = "#fefefe";
+		TextUtils.drawCRT({
+			ctx: this.ctx,
+			text: title,
+			x: this.canvas.width / 2,
+			y: this.canvas.height / 2 - 25,
+			fontFamily: "Nintendoid1",
+			fontSize: 30.5,
+			color: "#fefefe"
+		});
 
-		this.ctx.font = "30.5pt Nintendoid1";
-		this.ctx.fillTextCentered(title, this.canvas.width / 2, this.canvas.height / 2 - 25);
-
-		this.ctx.font = "8pt Nintendoid1";
-		this.ctx.fillTextCentered(subtitle, this.canvas.width / 2, this.canvas.height / 2 + 10);
+		TextUtils.drawCRT({
+			ctx: this.ctx,
+			text: subtitle,
+			x: this.canvas.width / 2,
+			y: this.canvas.height / 2 + 10,
+			fontFamily: "Nintendoid1",
+			fontSize: 8,
+			color: "#fefefe"
+		});
 	}
 	// #endregion
 
