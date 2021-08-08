@@ -1,10 +1,10 @@
 import { Grid } from "../model/grid.js";
 import { Piece } from "../model/piece.js";
 import { DensityCanvas } from "../widget/density-canvas.js";
-import { GRID_COLS, GRID_PADDING, GRID_ROWS, TARGET_FRAMETIME } from "../constants.js";
+import { GRID_COLS, GRID_PADDING, GRID_ROWS, STARTING_GAME_SPEED, TARGET_FRAMETIME } from "../constants.js";
 import { InputController, Keys } from "./input.js";
 import { AudioController, SoundFX } from "./audio.js";
-import { ScoreController } from "./score.js";
+import { UIController } from "./ui.js";
 
 export class GameController {
 
@@ -14,34 +14,76 @@ export class GameController {
 		this.canvas = new DensityCanvas();
 		this.canvas.attachToElement(this.canvasWrapper);
 		this.ctx = this.canvas.context;
-		this.speed = 2;
-		this.lastUpdateTime = 0;
-		this.running = true;
-		this.piecesPlaced = 0;
-		this.score = 0;
+		this.themeSongPlaying = false;
 
-		this.gridCanvasBuffer = null;
+		// Define the initial game state
+		this.state = GameStates.MENU;
+	}
+
+	setup() {
+		// Reset variables
+		this.#resetPlayingState();
+
+		// Calculate the canvas size
+		this.calculateSizing();
+
+		// Starts the render loop
+		this.#onFrame();
+	}
+
+	#resetPlayingState() {
+		// Reset the constants
+		this.speed = STARTING_GAME_SPEED;
+		this.score = 0;
+		this.piecesPlaced = 0;
 
 		// Define the grid
 		this.grid = new Grid({ rows: GRID_ROWS, columns: GRID_COLS });
 		this.currentPiece = Piece.random(this);
+
+		// Invalidates the buffer
+		this.#invalidateGridBuffer();
 	}
 
-	setup() {
-		this.calculateSizing();
+	#invalidateGridBuffer() {
+		// Invalidates the buffer
+		this.gridCanvasBuffer = null;
+		this.#renderGrid();
+	}
 
-		// Starts the render loop
-		this.#scheduleNextLoop();
+	#clearCanvas() {
+		// Clears the canvas
+		this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+	}
 
-		// Play the theme song in loop
-		setTimeout(() => {
-			AudioController.instance.play({
-				audio: SoundFX.THEME,
-				loop: true,
-				volume: 0.05,
-				cache: false
-			});
-		}, 500);
+	#onFrame() {
+		// Calculate the delta time, from the last frame to the current loop time
+		const deltaTime = (performance.now() - this.lastUpdateTime) / TARGET_FRAMETIME;
+
+		switch (this.state) {
+			case GameStates.MENU:
+				this.#loopMenu(deltaTime);
+				this.#clearCanvas();
+				this.#renderMenu();
+				break;
+
+			case GameStates.PLAYING:
+				this.#loopPlaying(deltaTime);
+				this.#clearCanvas();
+				this.#renderPlaying();
+				break;
+
+			case GameStates.GAMEOVER:
+				this.#loopGameOver(deltaTime);
+				this.#clearCanvas();
+				this.#renderGameOver();
+				break;
+		}
+
+		// Saves the last frame update time
+		this.lastUpdateTime = performance.now();
+
+		requestAnimationFrame(this.#onFrame.bind(this));
 	}
 
 	calculateSizing() {
@@ -67,30 +109,53 @@ export class GameController {
 		});
 	}
 
-	#scheduleNextLoop() {
-		requestAnimationFrame(() => {
-			// Calculate the delta time
-			const deltaTime = (performance.now() - this.lastUpdateTime) / TARGET_FRAMETIME;
+	// #region Menu
+	#loopMenu(deltaTime) {
+		if (InputController.instance.isAnyKeyDown()) {
+			// Start the theme song
+			if (!this.themeSongPlaying) {
+				// Play the theme song in loop
+				AudioController.instance.play({
+					audio: SoundFX.THEME,
+					loop: true,
+					volume: 0.05,
+					cache: false
+				});
 
-			if (this.running) {
-				// Update game
-				this.#loop(deltaTime);
-			} else {
-				// Game over
-				if (InputController.instance.isAnyKeyDown()) {
-					this.#onGameReset();
-				}
+				this.themeSongPlaying = true;
 			}
 
-			// Render game
-			this.#render();
+			// Change the game state
+			this.state = GameStates.PLAYING;
 
-			// Saves the last frame update time
-			this.lastUpdateTime = performance.now();
-		});
+			// Shows the UI
+			UIController.instance.setVisibility(true);
+		}
 	}
 
-	#loop(deltaTime) {
+	#renderMenu() {
+		this.#renderGrid();
+
+		this.ctx.fillStyle = "rgba(0, 0, 0, 0.2)";
+		this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+		// Define the string to be drawn
+		const title = "TETRIS";
+		const subtitle = "Press any key to start";
+
+		// Define the font style
+		this.ctx.fillStyle = "#fefefe";
+
+		this.ctx.font = "42.5pt Nintendoid1";
+		this.ctx.fillTextCentered(title, this.canvas.width / 2, this.canvas.height / 2 - 25);
+
+		this.ctx.font = "10pt Nintendoid1";
+		this.ctx.fillTextCentered(subtitle, this.canvas.width / 2, this.canvas.height / 2 + 10);
+	}
+	// #endregion
+
+	// #region Playing
+	#loopPlaying(deltaTime) {
 		// Updates the current piece
 		this.currentPiece.loop(deltaTime);
 
@@ -103,88 +168,12 @@ export class GameController {
 		InputController.instance.resetKey(Keys.ARROW_UP);
 	}
 
-	#onPlacePiece() {
-		// Play sound
-		AudioController.instance.play({
-			audio: SoundFX.PLACE_BLOCK,
-			pitch: 1 + Math.random() * 0.5 - 0.25
-		});
-
-		// Place the piece
-		this.grid.place(this.currentPiece);
-
-		// Generate a random piece
-		this.currentPiece = Piece.random(this);
-
-		// Check if the new piece already touched any piece
-		if (this.grid.isAnyCellBellowShape(this.currentPiece)) {
-			this.#onGameOver();
-		} else {
-			// Check if the user has made an tetris
-			const score = this.grid.removeFilledRows();
-			if (score > 0) this.#onTetris(score);
-
-			this.piecesPlaced++;
-			this.#updateUiElement("pieces", this.piecesPlaced);
-		}
-
-		// Invalidates the buffer
-		this.gridCanvasBuffer = null;
-		this.#renderGrid();
-	}
-
-	#updateUiElement(id, value) {
-		document.getElementById(id).innerText = value.toString();
-	}
-
-	#onTetris(score) {
-		// Adds the new score
-		const newScore = score * score * 100;
-		this.score += newScore;
-
-		// Updates the element
-		this.#updateUiElement("score", this.score);
-
-		ScoreController.instance.addPoints(newScore);
-
-
-		// Play the tetris sound, the more lines erased the higher the pitch of the sound
-		AudioController.instance.play({
-			audio: SoundFX.SCORE,
-			pitch: 0.75 + 0.25 * Math.min(score / 3, 1)
-		});
-	}
-
-	#onGameOver() {
-		AudioController.instance.play({
-			audio: SoundFX.GAME_OVER
-		});
-		this.running = false;
-	}
-
-	#onGameReset() {
-		// Rest variables
-		this.grid = new Grid({ rows: GRID_ROWS, columns: GRID_COLS });
-		this.currentPiece = Piece.random(this);
-		this.running = true;
-		this.piecesPlaced = 0;
-
-		// Invalidates the buffer
-		this.gridCanvasBuffer = null;
-		this.#renderGrid();
-	}
-
-	#render() {
-		// Clears the canvas
-		this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-
-		// Render the grid lines
+	#renderPlaying() {
+		// Renders the grid
 		this.#renderGrid();
 
-		// Renders the current piece
+		// Render the current piece
 		this.currentPiece.render(this.ctx, this.cellSize);
-
-		this.#scheduleNextLoop();
 	}
 
 	#renderGrid() {
@@ -204,4 +193,110 @@ export class GameController {
 		this.grid.render(ctx, this.cellSize);
 	}
 
+	#onPlacePiece() {
+		// Play sound
+		AudioController.instance.play({
+			audio: SoundFX.PLACE_BLOCK,
+			pitch: 1 + Math.random() * 0.5 - 0.25
+		});
+
+		// Place the piece
+		this.grid.place(this.currentPiece);
+
+		// Count grid lines and update UI
+		const gridLines = this.grid.countRowsWithAtLeastOneCell();
+		UIController.instance.set("lines", gridLines);
+
+		// Generate a random piece
+		this.currentPiece = Piece.random(this);
+
+		// Check if the new piece already touched any piece
+		if (this.grid.isAnyCellBellowShape(this.currentPiece)) {
+			this.#onGameOver();
+		} else {
+			// Check if the user has made an tetris
+			const score = this.grid.removeFilledRows();
+			if (score > 0) this.#onTetris(score);
+
+			// Increment the pieces placed count
+			this.piecesPlaced++;
+			// Update the UI
+			UIController.instance.set("pieces", this.piecesPlaced);
+		}
+
+		// Invalidates the buffer
+		this.#invalidateGridBuffer();
+	}
+
+	#onTetris(linesRemoved) {
+		// Adds the new score
+		const newScore = linesRemoved * linesRemoved * 100;
+		this.score += newScore;
+
+		this.speed = 1 + this.score / 100 * 0.25;
+		console.log(this.speed);
+
+		// Updates the element
+		UIController.instance.addPoints(newScore, this.score);
+
+		// Play the tetris sound
+		// Calculate the pitch shifting, the more lines removed higher the pitch
+		const pitch = 0.75 + 0.25 * Math.min(linesRemoved / 3, 1);
+		AudioController.instance.play({
+			audio: SoundFX.SCORE,
+			pitch: pitch
+		});
+	}
+
+	#onGameOver() {
+		// Plays the audio
+		AudioController.instance.play({
+			audio: SoundFX.GAME_OVER
+		});
+
+		// Set the game state
+		this.state = GameStates.GAMEOVER;
+
+		// Reset all key presses
+		InputController.instance.resetAllKeys();
+	}
+	// #endregion
+
+	// #region Game over
+	#loopGameOver(deltaTime) {
+		if (InputController.instance.isAnyKeyDown()) {
+			this.#resetPlayingState();
+
+			this.state = GameStates.PLAYING;
+		}
+	}
+
+	#renderGameOver() {
+		this.#renderGrid();
+
+		this.ctx.fillStyle = "rgba(0, 0, 0, 0.35)";
+		this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+		// Define the string to be drawn
+		const title = "GAME-OVER";
+		const subtitle = "Press any key to restart";
+
+		// Define the font style
+		this.ctx.fillStyle = "#fefefe";
+
+		this.ctx.font = "30.5pt Nintendoid1";
+		this.ctx.fillTextCentered(title, this.canvas.width / 2, this.canvas.height / 2 - 25);
+
+		this.ctx.font = "8pt Nintendoid1";
+		this.ctx.fillTextCentered(subtitle, this.canvas.width / 2, this.canvas.height / 2 + 10);
+	}
+	// #endregion
+
+
 }
+
+export const GameStates = {
+	"MENU": "menu",
+	"PLAYING": "playing",
+	"GAMEOVER": "gameover"
+};

@@ -71,7 +71,7 @@ export class Grid {
 				const y = row + piece.y + rowOffset;
 
 				// Skip the overflown and empty cells
-				if (x >= this.columns || y >= this.rows || this.cells[y][x] === Cell.empty) continue;
+				if (x >= this.columns || y >= this.rows || this.isCellEmpty(y, x)) continue;
 
 				return true;
 			}
@@ -88,7 +88,7 @@ export class Grid {
 
 			for (let column = 0; column < this.columns; column++) {
 				// Ignore empty cells
-				if (this.cells[row][column] === Cell.empty) {
+				if (this.isCellEmpty(row, column)) {
 					// Notify that the row wasn't all filled
 					filled = false;
 					break;
@@ -118,14 +118,31 @@ export class Grid {
 		return this.cells[row][column] === Cell.empty;
 	}
 
+	countRowsWithAtLeastOneCell() {
+		let count = 0;
+
+		for (let row = 0; row < this.rows; row++) {
+			for (let column = 0; column < this.columns; column++) {
+				// Detect non-empty cells
+				if (!this.isCellEmpty(row, column)) {
+					// Increment the row counter and exit the column for
+					count ++;
+					break;
+				}
+			}
+		}
+
+		return count;
+	}
+
 	#renderCells(ctx, cellSize) {
 		for (let row = 0; row < this.rows; row++) {
 			for (let column = 0; column < this.columns; column++) {
+				// Ignore empty cells
+				if (this.isCellEmpty(row, column)) continue;
+
 				// Fetch the cell
 				const cell = this.cells[row][column];
-
-				// Ignore empty cells
-				if (!cell) continue;
 
 				// Set the cell color
 				ctx.fillStyle = cell.color;

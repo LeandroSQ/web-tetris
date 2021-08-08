@@ -1,4 +1,4 @@
-const CONSUMED_EVENTS = ["keyup", "keypress", "keydown"];
+const CONSUMED_EVENTS = ["keyup", /* "keypress", */ "keydown"];
 
 export class InputController {
 
@@ -7,6 +7,7 @@ export class InputController {
 		this.consumedKeyIds = Object.keys(Keys);
 
 		this.pressedKeys = [];
+		this.eventBuffer = [];
 
 		CONSUMED_EVENTS.forEach((e) => {
 			window.addEventListener(e, this.#onKey.bind(this));
@@ -14,6 +15,24 @@ export class InputController {
 	}
 
 	#onKey(event) {
+		// Verify if the event of this key is buffered
+		// This is important to only handle an event once
+		// Ignoring duplicates, which would be a problem in Menu or GameOver screens
+		// If the user kept a key pressed the screen would simply skip itself
+		const cached = this.eventBuffer.find((x) => x.code === event.code);
+		if (cached) {
+			if (cached.type === event.type) {
+				// If the buffered event is the same type of the new event, ignore it
+				return;
+			} else {
+				// Change the buffered event type and continue
+				cached.type = event.type;
+			}
+		} else {
+			// The event wasn't buffered before, add it to the event buffer
+			this.eventBuffer.push({ type: event.type, code: event.code });
+		}
+
 		// Get the index of the event key from the Keys enum
 		const keyCodeIndex = this.consumedKeyCodes.indexOf(event.code);
 		// Ignore undefined keys
@@ -40,6 +59,10 @@ export class InputController {
 	resetKey(key) {
 		const index = this.pressedKeys.indexOf(key);
 		if (index !== -1) this.pressedKeys.splice(index, 1);
+	}
+
+	resetAllKeys() {
+		this.pressedKeys = [];
 	}
 
 	/**

@@ -52,3 +52,17 @@ Array.prototype.reverseRows = function() {
 
 	return matrix;
 };
+
+CanvasRenderingContext2D.prototype.fillTextCentered = function(str, x, y) {
+	// Calculate the string boundaries, to center it correctly
+	const measurement = this.measureText(str);
+
+	// Draws the string at the center
+	this.fillText(
+		str,
+		x - measurement.width / 2,
+		y
+	);
+
+	return { width: measurement.width };
+};

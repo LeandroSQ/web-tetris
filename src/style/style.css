@@ -9,6 +9,7 @@ html, body {
 	width: 100vw;
 	height: 100vh;
 	background: #073b4c;
+	overflow: hidden;
 }
 
 body {
@@ -30,11 +31,21 @@ div#wrapper {
 
 div#info-wrapper {
 	flex: 1;
+	overflow: hidden;
 	margin: 10pt;
 	color: #ecf0f1;
 }
 
+div#info-wrapper.visible #inner {
+	max-width: 100vw;
+	max-height: 100vh;
+}
+
 div#info-wrapper #inner {
+	max-width: 0;
+	max-height: 0;
+	transition: max-width 1s, max-height 1s;
+	overflow: hidden;
 	display: flex;
 	flex-direction: column;
 	max-width: calc(283pt + 20pt);

@@ -76,7 +76,7 @@ export class Piece {
 		this.#handleInput(deltaTime);
 
 		// Apply the falling speed to the piece
-		this.move({ x: 0, y: PIECE_FALLING_SPEED * deltaTime });
+		this.move({ x: 0, y: PIECE_FALLING_SPEED * deltaTime * this.game.speed });
 	}
 
 	#handleInput(deltaTime) {

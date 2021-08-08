@@ -13,6 +13,10 @@
         "sourceType": "module"
     },
     "rules": {
+        "indent": [
+            "error", "tab",
+            { "SwitchCase": 1 }
+        ],
         "newline-before-return": "error",
         "no-prototype-builtins": "off",
         "prefer-rest-params": "error",
@@ -29,10 +33,6 @@
         "prefer-const": "error",
         "prefer-template": "error",
         "no-tabs": "off",
-        "indent": [
-            "error",
-            "tab"
-        ],
         "linebreak-style": [
             "error",
             "unix"
