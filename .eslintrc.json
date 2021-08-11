@@ -17,6 +17,7 @@
             "error", "tab",
             { "SwitchCase": 1 }
         ],
+		"no-console": "error",
         "newline-before-return": "error",
         "no-prototype-builtins": "off",
         "prefer-rest-params": "error",

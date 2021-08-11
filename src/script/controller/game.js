@@ -1,12 +1,14 @@
 import { Grid } from "../model/grid.js";
-import { Piece } from "../model/piece.js";
 import { DensityCanvas } from "../widget/density-canvas.js";
-import { GRID_COLS, GRID_PADDING, GRID_ROWS, STARTING_GAME_SPEED, TARGET_FRAMETIME } from "../constants.js";
-import { InputController, Keys } from "./input.js";
-import { AudioController, SoundFX } from "./audio.js";
-import { UI, UIController } from "./ui.js";
-import { GhostPiece } from "../model/ghost-piece.js";
-import { TextUtils } from "../util/text.js";
+import { GRID_COLS, GRID_PADDING, GRID_ROWS, TARGET_FRAMETIME } from "../constants.js";
+import { UIUtils } from "../util/ui.js";
+import { MenuController } from "./menu.js";
+import { GameOverController } from "./gameover.js";
+import { GamePlayController } from "./gameplay.js";
+import { GameState } from "../enum/game-state.js";
+import { ParticleController } from "./particle.js";
+import { PauseController } from "./pause.js";
+import { Level } from "../model/level.js";
 
 export class GameController {
 
@@ -16,15 +18,21 @@ export class GameController {
 		this.canvas = new DensityCanvas();
 		this.canvas.attachToElement(this.canvasWrapper);
 		this.ctx = this.canvas.context;
-		this.themeSongPlaying = false;
+
+		// Define the controllers
+		this.menu = new MenuController(this);
+		this.gameOver = new GameOverController(this);
+		this.gamePlay = new GamePlayController(this);
+		this.paused = new PauseController(this);
+		this.particle = new ParticleController(this);
 
 		// Define the initial game state
-		this.state = GameStates.MENU;
+		this.state = GameState.MENU;
 	}
 
 	setup() {
 		// Reset variables
-		this.#resetPlayingState();
+		this.reset();
 
 		// Calculate the canvas size
 		this.calculateSizing();
@@ -33,28 +41,30 @@ export class GameController {
 		this.#onFrame();
 	}
 
-	#resetPlayingState() {
+	reset() {
 		// Reset the constants
-		this.speed = STARTING_GAME_SPEED;
 		this.score = 0;
-		this.piecesPlaced = 0;
 
 		// Define the grid
 		this.grid = new Grid({ rows: GRID_ROWS, columns: GRID_COLS });
-		this.currentPiece = Piece.random(this);
-		this.ghostPiece = new GhostPiece(this.currentPiece);
+
+		// Reset the level
+		this.gamePlay.reset();
+
+		// Kill all particles
+		this.particle.reset();
 
 		// Invalidates the buffer
-		this.#invalidateGridBuffer();
+		this.invalidateGridBuffer();
 
 		// Reset the UI
-		UIController.instance.reset();
+		UIUtils.reset();
 	}
 
-	#invalidateGridBuffer() {
+	invalidateGridBuffer() {
 		// Invalidates the buffer
 		this.gridCanvasBuffer = null;
-		this.#renderGrid();
+		this.renderGrid();
 	}
 
 	#clearCanvas() {
@@ -67,29 +77,51 @@ export class GameController {
 		const deltaTime = (performance.now() - this.lastUpdateTime) / TARGET_FRAMETIME;
 
 		switch (this.state) {
-			case GameStates.MENU:
-				this.#loopMenu(deltaTime);
+
+			case GameState.MENU:
+				this.menu.loop(deltaTime);
 				this.#clearCanvas();
-				this.#renderMenu();
+				this.menu.render();
 				break;
 
-			case GameStates.PLAYING:
-				this.#loopPlaying(deltaTime);
+			case GameState.PLAYING:
+				this.gamePlay.loop(deltaTime);
 				this.#clearCanvas();
-				this.#renderPlaying();
+				this.gamePlay.render();
 				break;
 
-			case GameStates.GAMEOVER:
-				this.#loopGameOver(deltaTime);
+			case GameState.GAMEOVER:
+				this.gameOver.loop(deltaTime);
 				this.#clearCanvas();
-				this.#renderGameOver();
+				this.gameOver.render();
 				break;
+
+			case GameState.PAUSED:
+				this.paused.loop(deltaTime);
+				this.#clearCanvas();
+				this.paused.render();
+				break;
+
 		}
+
+		// Renders the particles
+		this.particle.loopAndRender(deltaTime, this.ctx, this.cellSize);
 
 		// Saves the last frame update time
 		this.lastUpdateTime = performance.now();
 
+		// Schedule the next frame
 		requestAnimationFrame(this.#onFrame.bind(this));
+	}
+
+	onFocus() {
+		if (this.state !== GameState.PLAYING) return;
+
+		// Reset the last update time, therefore the delta timing will not consider the not focused
+		// window time as an update
+		this.lastUpdateTime = 0;
+
+		this.state = GameState.PAUSED;
 	}
 
 	calculateSizing() {
@@ -115,91 +147,7 @@ export class GameController {
 		});
 	}
 
-	// #region Menu
-	#loopMenu(deltaTime) {
-		if (InputController.instance.isAnyKeyDown()) {
-			// Start the theme song
-			if (!this.themeSongPlaying) {
-				// Play the theme song in loop
-				AudioController.instance.play({
-					audio: SoundFX.THEME,
-					loop: true,
-					volume: 0.05,
-					cache: false
-				});
-
-				this.themeSongPlaying = true;
-			}
-
-			// Change the game state
-			this.state = GameStates.PLAYING;
-
-			// Shows the UI
-			UIController.instance.setVisibility(true);
-		}
-	}
-
-	#renderMenu() {
-		this.#renderGrid();
-
-		this.ctx.fillStyle = "rgba(0, 0, 0, 0.2)";
-		this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-
-		// Define the string to be drawn
-		const title = "TETRIS";
-		const subtitle = "Press any key to start";
-
-		TextUtils.drawCRT({
-			ctx: this.ctx,
-			text: title,
-			x: this.canvas.width / 2,
-			y: this.canvas.height / 2 - 25,
-			fontFamily: "Nintendoid1",
-			fontSize: 42.5,
-			color: "#fefefe"
-		});
-
-		TextUtils.drawCRT({
-			ctx: this.ctx,
-			text: subtitle,
-			x: this.canvas.width / 2,
-			y: this.canvas.height / 2 + 10,
-			fontFamily: "Nintendoid1",
-			fontSize: 10,
-			color: "#fefefe"
-		});
-	}
-	// #endregion
-
-	// #region Playing
-	#loopPlaying(deltaTime) {
-		// Updates the current piece
-		this.currentPiece.loop(deltaTime);
-
-		// Checks if the current piece is about to collide
-		if (this.grid.isAnyCellBellowShape(this.currentPiece) || this.currentPiece.y + this.currentPiece.height >= this.grid.rows) {
-			this.#onPlacePiece();
-		} else {
-			// Updates the ghost piece
-			this.ghostPiece.loop(this.grid);
-		}
-
-		// Resets the keypress of the UP key
-		InputController.instance.resetKey(Keys.ARROW_UP);
-	}
-
-	#renderPlaying() {
-		// Renders the grid
-		this.#renderGrid();
-
-		// Render the current piece
-		this.currentPiece.render(this.ctx, this.cellSize);
-
-		// Renders the ghost piece
-		this.ghostPiece.render(this.ctx, this.cellSize);
-	}
-
-	#renderGrid() {
+	renderGrid() {
 		// If the buffer is already defined, just draw it to the canvas
 		if (this.gridCanvasBuffer) {
 			this.gridCanvasBuffer.drawBufferTo(0, 0, this.ctx);
@@ -216,131 +164,8 @@ export class GameController {
 		this.grid.render(ctx, this.cellSize);
 	}
 
-	#onPlacePiece() {
-		// Play sound
-		AudioController.instance.play({
-			audio: SoundFX.PLACE_BLOCK,
-			pitch: 1 + Math.random() * 0.5 - 0.25
-		});
-
-		// Place the piece
-		this.grid.place(this.currentPiece);
-
-		// Count grid lines and update UI
-		const gridLines = this.grid.countRowsWithAtLeastOneCell();
-		UIController.instance.set(UI.LINES, gridLines);
-
-		// Generate a random piece
-		this.currentPiece = Piece.random(this);
-		this.ghostPiece = new GhostPiece(this.currentPiece);
-
-		// Check if the new piece already touched any piece
-		if (this.grid.isAnyCellBellowShape(this.currentPiece)) {
-			this.#onGameOver();
-		} else {
-			// Check if the user has made an tetris
-			const score = this.grid.removeFilledRows();
-			if (score > 0) this.#onTetris(score);
-
-			// Increment the pieces placed count
-			this.piecesPlaced++;
-			// Update the UI
-			UIController.instance.set(UI.PIECES, this.piecesPlaced);
-		}
-
-		// Invalidates the buffer
-		this.#invalidateGridBuffer();
+	get speed() {
+		return Level.list[this.gamePlay.levelIndex].speed;
 	}
-
-	#onTetris(linesRemoved) {
-		// Adds the new score
-		const newScore = linesRemoved * linesRemoved * 100;
-		this.score += newScore;
-
-		this.speed += linesRemoved / 5;
-		console.log(this.speed);
-
-		// Updates the element
-		UIController.instance.addPoints(newScore, this.score);
-
-		// Play the tetris sound
-		// Calculate the pitch shifting, the more lines removed higher the pitch
-		const pitch = 0.75 + 0.25 * Math.min(linesRemoved / 3, 1);
-		AudioController.instance.play({
-			audio: SoundFX.SCORE,
-			pitch: pitch
-		});
-	}
-
-	#onGameOver() {
-		// Plays the audio
-		AudioController.instance.play({
-			audio: SoundFX.GAME_OVER
-		});
-
-		// Set the game state
-		this.state = GameStates.GAMEOVER;
-
-		// Reset all key presses
-		InputController.instance.resetAllKeys();
-	}
-	// #endregion
-
-	// #region Game over
-	#loopGameOver(deltaTime) {
-		if (InputController.instance.isAnyKeyDown()) {
-			this.#resetPlayingState();
-
-			this.state = GameStates.PLAYING;
-		}
-	}
-
-	#renderGameOver() {
-		// Blurs the canvas
-		this.ctx.save();
-		this.ctx.filter = "blur(2px)";
-
-		// Renders the grid
-		this.#renderGrid();
-
-		// Dims the canvas
-		this.ctx.fillStyle = "rgba(0, 0, 0, 0.35)";
-		this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-
-		// Restore the canvas filters
-		this.ctx.restore();
-
-		// Define the string to be drawn
-		const title = "GAME-OVER";
-		const subtitle = "Press any key to restart";
-
-		TextUtils.drawCRT({
-			ctx: this.ctx,
-			text: title,
-			x: this.canvas.width / 2,
-			y: this.canvas.height / 2 - 25,
-			fontFamily: "Nintendoid1",
-			fontSize: 30.5,
-			color: "#fefefe"
-		});
-
-		TextUtils.drawCRT({
-			ctx: this.ctx,
-			text: subtitle,
-			x: this.canvas.width / 2,
-			y: this.canvas.height / 2 + 10,
-			fontFamily: "Nintendoid1",
-			fontSize: 8,
-			color: "#fefefe"
-		});
-	}
-	// #endregion
-
 
 }
-
-export const GameStates = {
-	"MENU": "menu",
-	"PLAYING": "playing",
-	"GAMEOVER": "gameover"
-};

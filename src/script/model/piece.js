@@ -1,6 +1,9 @@
-import { Colors } from "../util/color.js";
+import { ColorUtils } from "../util/color.js";
 import { PIECE_FALLING_SPEED, PIECE_MOVING_SPEED } from "../constants.js";
-import { InputController, Keys } from "../controller/input.js";
+import { InputUtils } from "../util/input.js";
+import { BasePiece } from "./base-piece.js";
+import { Key } from "../enum/key.js";
+import { Tetrominoes } from "./tetromino.js";
 
 /**
  * @property {GameController} game
@@ -11,68 +14,29 @@ import { InputController, Keys } from "../controller/input.js";
  * @property {Number} position.x
  * @property {Number} position.y
  **/
-export class Piece {
+export class Piece extends BasePiece {
 
 	/**
-	 * @param {Piece.types} type
+	 * @param {Tetromino} tetromino
 	 * @param {GameController} game
 	 **/
-	constructor(type, game) {
+	constructor(tetromino, game) {
+		super();
+
 		this.game = game;
 
-		if (type) {
-			this.type = type;
-			this.shape = Piece.shapes[this.type].slice(0);
+		if (tetromino) {
+			this.type = tetromino.type;
+			this.shape = tetromino.shape;
+			// this.color = ColorUtils.getColor(this.type, this.game.gamePlay.levelIndex);
 
 			this.position = {
 				x: game.grid.columns / 2 - this.width / 2,
-				y: 0
+				y: -1
 			};
 
 			this.drawPosition = { x: this.position.x, y: this.position.y };
 		}
-
-		this.color = Colors.random();
-
-	}
-
-	clone() {
-		const temp = new Piece(null, this.game);
-		temp.shape = this.shape.slice(0);
-		temp.position = { x: this.position.x, y: this.position.y };
-		temp.drawPosition = { x: this.drawPosition.x, y: this.drawPosition.y };
-
-		return temp;
-	}
-
-	render(ctx, cellSize) {
-		// Set the piece color
-		ctx.save();
-		ctx.fillStyle = this.color;
-		ctx.strokeStyle = "#ecf0f1";
-		ctx.lineWidth = 1.5;
-
-		// Draws the piece at it's position
-		ctx.translate(this.drawPosition.x * cellSize, this.drawPosition.y * cellSize);
-
-		for (let row = 0; row < this.shape.length; row++) {
-			for (let column = 0; column < this.shape[row].length; column++) {
-				// Ignore empty spaces
-				if (this.shape[row][column] === Piece.empty) continue;
-
-				// Calculate cell position
-				const x = column * cellSize;
-				const y = row * cellSize;
-
-				// Draws the cell
-				ctx.beginPath();
-				ctx.rect(x, y, cellSize, cellSize);
-				ctx.fill();
-				ctx.stroke();
-			}
-		}
-
-		ctx.restore();
 	}
 
 	#animateTranslation(deltaTime) {
@@ -93,22 +57,20 @@ export class Piece {
 	}
 
 	#handleInput(deltaTime) {
-		const input = InputController.instance;
-
 		// Controls the piece based on input
-		if (input.isKeyDown(Keys.ARROW_UP)) {
+		if (InputUtils.isKeyDown(Key.ARROW_UP)) {
 			this.rotate();
 		}
 
-		if (input.isKeyDown(Keys.ARROW_LEFT)) {
+		if (InputUtils.isKeyDown(Key.ARROW_LEFT)) {
 			this.move({ x: -PIECE_MOVING_SPEED * deltaTime, y: 0 });
 		}
 
-		if (input.isKeyDown(Keys.ARROW_RIGHT)) {
+		if (InputUtils.isKeyDown(Key.ARROW_RIGHT)) {
 			this.move({ x: PIECE_MOVING_SPEED * deltaTime, y: 0 });
 		}
 
-		if (input.isKeyDown(Keys.ARROW_DOWN)) {
+		if (InputUtils.isKeyDown(Key.ARROW_DOWN)) {
 			this.move({ x: 0, y: PIECE_MOVING_SPEED * deltaTime * 2 });
 		}
 	}
@@ -135,6 +97,10 @@ export class Piece {
 		this.shape = this.shape.transpose().reverseRows();
 	}
 
+	get color() {
+		return ColorUtils.getColor(this.type, this.game.gamePlay.levelIndex);
+	}
+
 	get width() {
 		return this.shape[0].length;
 	}
@@ -152,73 +118,3 @@ export class Piece {
 	}
 
 }
-
-/**
- * Generates a random piece
- *
- * @param {Game} game
- * @return {Piece} The generated piece
- */
-Piece.random = function(game) {
-	// Fetch all possible types
-	const types = Object.keys(Piece.types);
-
-	// Pick a random type
-	const typeName = types.random();
-
-	return new Piece(Piece.types[typeName], game);
-};
-
-Piece.empty = 0;
-
-Piece.types = {
-	"L": "l",
-	"REVERSED_L": "reversed_l",
-	"BLOCK": "block",
-	"Z": "z",
-	"REVERSED_Z": "reversed_z",
-	"LINE": "line",
-	"T": "t",
-};
-
-Piece.shapes = {
-	// L
-	"l": [
-		[1, 0],
-		[1, 0],
-		[1, 1]
-	],
-	// REVERSED_L
-	"reversed_l": [
-		[0, 1],
-		[0, 1],
-		[1, 1]
-	],
-	// BLOCK
-	"block": [
-		[1, 1],
-		[1, 1],
-	],
-	// Z
-	"z": [
-		[1, 1, 0],
-		[0, 1, 1],
-	],
-	// REVERSED_Z
-	"reversed_z": [
-		[0, 1, 1],
-		[1, 1, 0],
-	],
-	// LINE
-	"line": [
-		[1],
-		[1],
-		[1],
-		[1],
-	],
-	// T
-	"t": [
-		[1, 1, 1],
-		[0, 1, 0],
-	],
-};

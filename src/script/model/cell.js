@@ -1,9 +1,14 @@
 export class Cell {
 
-	constructor({ color }) {
+	/**
+	 * @param {string} color HEX format color
+	 */
+	constructor(color) {
 		this.color = color;
 	}
 
-}
+	static get empty() {
+		return null;
+	}
 
-Cell.empty = null;
+}

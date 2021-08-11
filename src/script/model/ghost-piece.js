@@ -1,53 +1,49 @@
-import { Piece } from "./piece.js";
+import { BasePiece } from "./base-piece.js";
 
-export class GhostPiece {
+export class GhostPiece extends BasePiece {
 
 	constructor(piece) {
+		super();
+
 		this.owner = piece;
+		this.game = piece.game;
+		this.lastShapeLength = piece.shape.length;
 
-		this.x = piece.x;
-		this.y = piece.y;
-		this.color = `${piece.color}80`;
+		this.drawPosition = {
+			x: 0,
+			y: piece.y
+		};
+
+		this.color = {
+			background: `${piece.color.background}34`,
+			border: `${piece.color.border}34`
+		};
 	}
 
-	loop(grid) {
-		this.x = this.owner.x;
-		this.y = this.owner.y;
+	loop() {
+		let needToRecalculateCollisions = false;
+		if (this.x !== this.owner.x || this.lastShapeLength != this.owner.shape.length) needToRecalculateCollisions = true;
+		this.lastShapeLength = this.owner.shape.length;
 
-		// Increment the Y until the ghost piece reaches a non-empty cell or the grid bottom
-		while (this.y + this.height < grid.rows && !grid.checkShapeCollision(this, 1, 0)) {
-			this.y++;
-		}
-	}
+		this.drawPosition.x = this.owner.drawPosition.x;
 
-	render(ctx, cellSize) {
-		// Set the piece color
-		ctx.save();
-		ctx.fillStyle = this.color;
-		ctx.strokeStyle = "#ecf0f1";
-		ctx.lineWidth = 1.5;
+		// If the owner piece moved, check the ground collisions
+		if (needToRecalculateCollisions) {
+			this.drawPosition.y = this.owner.drawPosition.y;
 
-		// Draws the piece at it's position
-		ctx.translate(this.x * cellSize, this.y * cellSize);
-
-		for (let row = 0; row < this.shape.length; row++) {
-			for (let column = 0; column < this.shape[row].length; column++) {
-				// Ignore empty spaces
-				if (this.shape[row][column] === Piece.empty) continue;
-
-				// Calculate cell position
-				const x = column * cellSize;
-				const y = row * cellSize;
-
-				// Draws the cell
-				ctx.beginPath();
-				ctx.rect(x, y, cellSize, cellSize);
-				ctx.fill();
-				ctx.stroke();
+			// Increment the Y until the ghost piece reaches a non-empty cell or the grid bottom
+			while (this.y + this.height < this.game.grid.rows && !this.game.grid.checkShapeCollision(this, 1, 0)) {
+				this.drawPosition.y = Math.ceil(this.drawPosition.y + 1);
 			}
 		}
+	}
 
-		ctx.restore();
+	get x() {
+		return Math.floor(this.drawPosition.x);
+	}
+
+	get y() {
+		return Math.ceil(this.drawPosition.y);
 	}
 
 	get shape() {

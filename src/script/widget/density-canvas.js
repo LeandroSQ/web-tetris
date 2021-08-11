@@ -61,11 +61,11 @@ export class DensityCanvas {
 		this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 	}
 
-	drawBufferTo(x, y, context) {
-		context.save();
-		context.scale(1 / this.drawRatio, 1 / this.drawRatio);
-		context.drawImage(this.canvas, x, y);
-		context.restore();
+	drawBufferTo(x, y, ctx) {
+		ctx.save();
+		ctx.scale(1 / this.drawRatio, 1 / this.drawRatio);
+		ctx.drawImage(this.canvas, x, y);
+		ctx.restore();
 	}
 
 	/**

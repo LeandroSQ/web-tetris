@@ -8,8 +8,10 @@
 html, body {
 	width: 100vw;
 	height: 100vh;
-	background: #073b4c;
+	background: var(--background);
 	overflow: hidden;
+
+	transition: background 1s;
 }
 
 body {
@@ -23,17 +25,21 @@ div#dummy {
 }
 
 div#wrapper {
-	border: 1px solid #ecf0f1;
+	border: 1px solid var(--foreground);
 	max-height: 0px;
 	animation: Startup 350ms ease-in-out 0s 1 both;
 	overflow: hidden;
+
+	transition: border-color 1s;
 }
 
 div#info-wrapper {
 	flex: 1;
 	overflow: hidden;
 	margin: 10pt;
-	color: #ecf0f1;
+	color: var(--foreground);
+
+	transition: color 1s;
 }
 
 div#info-wrapper.visible #inner {

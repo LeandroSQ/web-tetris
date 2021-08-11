@@ -1,5 +1,5 @@
+import { BasePiece } from "./base-piece.js";
 import { Cell } from "./cell.js";
-import { Piece } from "./piece.js";
 
 export class Grid {
 
@@ -24,8 +24,8 @@ export class Grid {
 	}
 
 	render(ctx, cellSize) {
-		this.#renderCells(ctx, cellSize);
 		this.#renderLines(ctx, cellSize);
+		this.#renderCells(ctx, cellSize);
 	}
 
 	/**
@@ -38,13 +38,13 @@ export class Grid {
 		for (let row = 0; row < piece.height; row++) {
 			for (let column = 0; column < piece.width; column++) {
 				// Ignore empty cells
-				if (piece.shape[row][column] === Piece.empty) continue;
+				if (piece.shape[row][column] === BasePiece.empty) continue;
 
 				const x = column + piece.x;
 				const y = row + piece.y;
 
 				// Place the new cell into the grid
-				this.cells[y][x] = new Cell({ color: piece.color });
+				this.cells[y][x] = new Cell(piece.color);
 			}
 		}
 	}
@@ -52,7 +52,7 @@ export class Grid {
 	/**
 	 * Detects whether there is a cell bellow the provided piece
 	 *
-	 * @param {Piece} piece
+	 * @param {BasePiece} piece
 	 *
 	 * @return {Boolean} False when no cell bellow the piece, True when there is at least one cell bellow the piece
 	 */
@@ -60,18 +60,27 @@ export class Grid {
 		return this.checkShapeCollision(piece, 1, 0);
 	}
 
+	/**
+	 * Detects whether there is a cell colliding with the provided piece
+	 *
+	 * @param {BasePiece} piece
+	 * @param {Number} rowOffset The Y offset
+	 * @param {Number} columnOffset The X offset
+	 *
+	 * @return {Boolean} False when no cell is colliding the piece, True when there is one
+	 */
 	checkShapeCollision(piece, rowOffset=0, columnOffset=0) {
 		for (let row = 0; row < piece.height; row++) {
 			for (let column = 0; column < piece.width; column++) {
 				// Skip the empty cells of the piece
-				if (piece.shape[row][column] === Piece.empty) continue;
+				if (piece.shape[row][column] === BasePiece.empty) continue;
 
 				// Calculate the position below the piece's cell
 				const x = column + piece.x + columnOffset;
 				const y = row + piece.y + rowOffset;
 
 				// Skip the overflown and empty cells
-				if (x >= this.columns || y >= this.rows || this.isCellEmpty(y, x)) continue;
+				if (y < 0 || x < 0 || x >= this.columns || y >= this.rows || this.isCellEmpty(y, x)) continue;
 
 				return true;
 			}
@@ -145,7 +154,8 @@ export class Grid {
 				const cell = this.cells[row][column];
 
 				// Set the cell color
-				ctx.fillStyle = cell.color;
+				ctx.fillStyle = cell.color.background;
+				ctx.strokeStyle = cell.color.border;
 
 				// Calculate cell position
 				const x = column * cellSize;
@@ -153,7 +163,9 @@ export class Grid {
 
 				// Draws the cell
 				ctx.beginPath();
-				ctx.fillRect(x, y, cellSize, cellSize);
+				ctx.rect(x, y, cellSize, cellSize);
+				ctx.fill();
+				ctx.stroke();
 			}
 		}
 	}
@@ -177,6 +189,19 @@ export class Grid {
 			ctx.moveTo(cellSize * column, 0);
 			ctx.lineTo(cellSize * column, cellSize * this.rows);
 			ctx.stroke();
+		}
+	}
+
+	setColorForAllCells(background, border) {
+		for (let row = 0; row < this.rows; row++) {
+			for (let column = 0; column < this.columns; column++) {
+				// Detect non-empty cells
+				if (!this.isCellEmpty(row, column)) {
+					// Increment the row counter and exit the column for
+					const cell = this.cells[row][column];
+					cell.color = { background, border };
+				}
+			}
 		}
 	}
 

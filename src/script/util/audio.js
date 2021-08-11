@@ -1,10 +1,8 @@
-export class AudioController {
+export class AudioUtils {
 
-	constructor() {
-		this.audioCache = { };
-	}
+	static #cache = {};
 
-	#decodeAudioData(audioContext, audioData) {
+	static #decodeAudioData(audioContext, audioData) {
 		return new Promise((resolve, reject) => {
 			audioContext.decodeAudioData(audioData.slice(0),
 				(buffer) => {
@@ -18,19 +16,29 @@ export class AudioController {
 	}
 
 	/** @return {AudioContext} */
-	#createAudioContext() {
+	static #createAudioContext() {
 		if (window.AudioContext) return new window.AudioContext();
 		else return new window.webkitAudioContext();// eslint-disable-line new-cap
 	}
 
-	async #loadAudio(path) {
+	/**
+	 * @param {AudioContext} context
+	 *
+	 * @return {GainNode}
+	 **/
+	static #createGainNode(context) {
+		if ("createGain" in context) return context.createGain();
+		else return context.createGainNode();
+	}
+
+	static async #loadAudio(path) {
 		const response = await fetch(path);
 
 		return await response.arrayBuffer();
 	}
 
 	/**
-	 * Plays a given sound fx
+	 * Plays a given sound effect
 	 *
 	 * @param {Object} obj Rest parameter object
 	 * @param {SoundFX} obj.audio - The audio to play
@@ -39,24 +47,24 @@ export class AudioController {
 	 * @param {Boolean} obj.loop - Determines if the audio will be played in a loop
 	 * @param {Boolean} obj.cache - Determines if the audio data should be cached, useful for constantly used sound fx
 	 */
-	async play({ audio, pitch=1, volume=1, loop=false, cache=true }) {
+	static async play({ audio, pitch=1, volume=1, loop=false, cache=true }) {
 		// Create audio context, source and node gain
 		const context = this.#createAudioContext();
 		const source = context.createBufferSource();
-		const gain = context.createGain();
+		const gain = this.#createGainNode(context);
 		gain.connect(context.destination);
 
-		// Fetches de audio data
+		// Fetch the audio data
 		let audioData = null;
-		if (this.audioCache.hasOwnProperty(audio)) {
+		if (this.#cache.hasOwnProperty(audio)) {
 			// If the given audio was already cached, load from the cache
-			audioData = this.audioCache[audio];
+			audioData = this.#cache[audio];
 		} else {
 			// If the given audio wasn't cached before, load it
 			audioData = await this.#loadAudio(audio);
 
 			// Caches the loaded audio, if requested
-			if (cache) this.audioCache[audio] = audioData;
+			if (cache) this.#cache[audio] = audioData;
 		}
 
 		// Decode the audio
@@ -77,25 +85,4 @@ export class AudioController {
 		source.play();
 	}
 
-	/**
-	 * Retrieves an existing singleton instance of the InputController
-	 * Or creates a new one
-	 *
-	 * @return {AudioController} The singleton instance of the InputController
-	 */
-	static get instance() {
-		if (!window.audioControllerInstance) window.audioControllerInstance = new AudioController();
-
-		return window.audioControllerInstance;
-	}
 }
-
-// TODO: Fix this, it's only a temporary solution for github pages
-const audioSourcePath = window.location.pathname.substring(0, window.location.pathname.lastIndexOf("/"));
-
-export const SoundFX = {
-	"PLACE_BLOCK": `${audioSourcePath}/audio/place.mp3`,
-	"GAME_OVER": `${audioSourcePath}/audio/gameover.wav`,
-	"THEME": `${audioSourcePath}/audio/music.mp3`,
-	"SCORE": `${audioSourcePath}/audio/score.wav`,
-};

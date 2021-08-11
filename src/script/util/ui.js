@@ -1,10 +1,8 @@
-export class UIController {
+import { UIElement } from "../enum/ui-element.js";
 
-	constructor() {
+export class UIUtils {
 
-	}
-
-	setVisibility(visible = false) {
+	static setVisibility(visible = false) {
 		const infoWrapper = document.getElementById("info-wrapper");
 
 		if (visible) {
@@ -14,29 +12,29 @@ export class UIController {
 		}
 	}
 
-	reset() {
+	static reset(value="0") {
 		// Iterates trough every UI item
-		for (const property in UI) {
-			if (!UI.hasOwnProperty(property)) continue;
+		for (const property in UIElement) {
+			if (!UIElement.hasOwnProperty(property)) continue;
 
-			// Set it's value to 0
-			this.set(UI[property], "0");
+			// Set it's value
+			this.set(UIElement[property], value);
 		}
 	}
 
-	set(id, value) {
+	static set(id, value) {
 		const element = document.getElementById(id);
 		element.innerText = value.toString();
 	}
 
-	addPoints(newPoints, totalPoints) {
+	static addPoints(newPoints, totalPoints) {
 		// Creates a new element to hold the added points
 		const x = document.createElement("span");
 		x.className = "floating-point";
 		x.innerText = `+${newPoints}`;
 
 		// Gets the score element and update it's value
-		const scoreElement = document.getElementById(UI.SCORE);
+		const scoreElement = document.getElementById(UIElement.SCORE);
 		scoreElement.innerText = totalPoints.toString();
 
 		// Append the element to DOM
@@ -48,22 +46,4 @@ export class UIController {
 		}, 3000);
 	}
 
-	/**
-	 * Retrieves an existing singleton instance of the UIController
-	 * Or creates a new one
-	 *
-	 * @return {UIController} The singleton instance of the UIController
-	 */
-	static get instance() {
-		if (!window.uiControllerInstance) window.uiControllerInstance = new UIController();
-
-		return window.uiControllerInstance;
-	}
-
 }
-
-export const UI = {
-	"SCORE": "score",
-	"LINES": "lines",
-	"PIECES": "pieces"
-};

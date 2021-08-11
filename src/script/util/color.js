@@ -1,6 +1,9 @@
-export const Colors = [
-	"#ef476f",
-	"#ffd166",
-	"#06d6a0",
-	"#118ab2"
-];
+import { Level } from "../model/level.js";
+
+export class ColorUtils {
+
+	static getColor(index=0, level=0) {
+		return Level.list[level].getColorForPiece(index);
+	}
+
+}
