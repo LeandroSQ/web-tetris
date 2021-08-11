@@ -18,8 +18,41 @@ W.I.P
 
 ## Features
 - WebAudio API
+  - Pitch manipulation
+  - Looping sounds
+  - Audio decoding from array buffer
 - Fetch API
 - Double buffering canvas
 - HighDPI (Retina compatible) canvas
-- ES6
-- Modules, classes, private fields
+- Modern JavaScript (ES2021)
+  - Modules
+  - Classes
+  - Private fields
+- Project structure based on MVC
+- Made on top of Official Tetris Guidelines
+- Animations
+- Particle system
+  - Combo system
+  - Impact explosion system
+- Leveling system
+  - 0 - Flat colors
+  - 1 - Dracula colors
+  - 2 - Monokai colors
+  - 3 - Material colors
+- State machine
+- Manu, Pause and Game over screens
+
+
+## TODO
+
+[] - Show next piece in the bag
+
+[] - Embed UI into canvas
+
+[] - Piece hold system
+
+[] - Hard drop system
+
+[] - Add more levels
+
+[] - Mobile support
