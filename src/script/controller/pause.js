@@ -11,6 +11,7 @@ export class PauseController {
 	loop(deltaTime) {
 		if (InputUtils.isAnyKeyDown()) {
 			this.game.state = GameState.PLAYING;
+			InputUtils.resetAllKeys();
 		}
 	}
 

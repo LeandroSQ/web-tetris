@@ -168,6 +168,13 @@ export class GamePlayController {
 		// Updates the current piece
 		this.currentPiece.loop(deltaTime);
 
+		if (InputUtils.isKeyDown(Key.ESCAPE)) {
+			this.game.state = GameState.PAUSED;
+			InputUtils.resetKey(Key.ESCAPE);
+			
+			return;
+		}
+
 		// Checks if the current piece is about to collide
 		if (this.game.grid.isAnyCellBellowShape(this.currentPiece) || this.currentPiece.y + this.currentPiece.height >= this.game.grid.rows) {
 			this.#onPlacePiece();
