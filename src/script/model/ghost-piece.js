@@ -25,7 +25,7 @@ export class GhostPiece extends BasePiece {
 		if (this.x !== this.owner.x || this.lastShapeLength != this.owner.shape.length) needToRecalculateCollisions = true;
 		this.lastShapeLength = this.owner.shape.length;
 
-		this.drawPosition.x = this.owner.drawPosition.x;
+		this.drawPosition.x = Math.floor(this.owner.position.x);
 
 		// If the owner piece moved, check the ground collisions
 		if (needToRecalculateCollisions) {

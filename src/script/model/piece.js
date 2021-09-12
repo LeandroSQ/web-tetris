@@ -70,6 +70,10 @@ export class Piece extends BasePiece {
 			this.move({ x: PIECE_MOVING_SPEED * deltaTime, y: 0 });
 		}
 
+		if (!InputUtils.isKeyDown(Key.ARROW_LEFT) && !InputUtils.isKeyDown(Key.ARROW_RIGHT)) {
+			this.position.x = Math.floor(this.position.x) + 0.5;
+		}
+
 		if (InputUtils.isKeyDown(Key.ARROW_DOWN)) {
 			this.move({ x: 0, y: PIECE_MOVING_SPEED * deltaTime * 2 });
 		}
