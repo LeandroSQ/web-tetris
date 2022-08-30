@@ -1,0 +1,13 @@
+{
+	"tetris": "TETRIS",
+	"gameover": "GAME OVER",
+	"paused": "PAUSED",
+	"press_any_key_to_start": "Press any key to start",
+	"press_any_key_to_restart": "Press any key to restart",
+	"press_any_key_to_resume": "Press any key to resume",
+	"lines": "Lines:",
+	"pieces": "Pieces:",
+	"score": "Score:",
+	"next": "NEXT",
+	"combo": "COMBO"
+}

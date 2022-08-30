@@ -6,5 +6,16 @@
                 "shippedProposals": true
             }
         ]
-    ]
+    ],
+	"plugins": [
+		[
+			"@babel/plugin-transform-runtime",
+			{
+				"regenerator": true
+			}
+		]
+	],
+	"compact": true,
+	"minified": true,
+	"sourceMaps": true
 }

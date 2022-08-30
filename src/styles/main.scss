@@ -1,0 +1,42 @@
+@import "fonts", "startup-animation", "floating-point-animation";
+
+* {
+	margin: 0px;
+	padding: 0px;
+	box-sizing: border-box;
+	font-family: 'Nintendoid1', cursive;
+}
+
+html, body {
+	width: 100vw;
+	height: 100%;
+	height: -webkit-fill-available;
+}
+
+html {
+	--background: #073B4C;
+	--foreground: #ecf0f1;
+}
+
+body {
+	display: flex;
+	place-content: center;
+	place-items: center;
+	background: var(--background);
+	overflow: hidden;
+
+	transition: background 1s;
+}
+
+div#wrapper {
+	// border: 1px solid var(--foreground);
+	max-height: 0px;
+	animation: Startup 350ms ease-in-out 0s 1 both;
+	overflow: hidden;
+
+	transition: border-color 1s;
+}
+
+canvas {
+	border-radius: 7.5pt;
+}
