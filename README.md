@@ -10,7 +10,7 @@
     Tetris game made with JavaScript, HTML and CSS.
 </p>
 
-[Live demo](https://leandrosq.github.io/web-tetris/src/index.html)
+[Live demo](https://leandrosq.github.io/web-tetris/)
 
 ## How to play
 
@@ -79,15 +79,19 @@ This in my opinion turns the game much more fun for those, like myself, that are
 ### Level 1
 	- Flat colors
 	- Squircle
+
 ### Level 2
 	- Flat colors
 	- Square
+
 ### Level 3
 	- Dracula colors
 	- Squircle outline
+
 ### Level 4
 	- Monokai colors
 	- Circle
+	
 ### Level 5
 	- Material colors
 	- Hexagon
@@ -130,5 +134,7 @@ This in my opinion turns the game much more fun for those, like myself, that are
 
 
 ## Acknowledgements
-[thoseawesomeguys prompts](https://thoseawesomeguys.com/prompts) for the Keyboard and GamePad icons.
-[Press Start](https://www.dafont.com/press-start.font) for the Font used on this game.
+
+[ThoseAwesomeGuys Prompts](https://thoseawesomeguys.com/prompts) for the Keyboard and GamePad icons.
+
+[Zeh Jose Fernando Baldo Carneiro](https://www.dafont.com/nokia-cellphone.font) for the Font (NokiaFC22) used on this game.
